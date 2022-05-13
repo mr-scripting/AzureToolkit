@@ -38,6 +38,8 @@ param (
     [string]$folder,
     [Parameter(Mandatory)][string][ValidateSet("csv", "xlsx")]$format = "csv"
 )
+# Variables
+$fileName = "\Azure-IAM-Report-" + $subscriptionName
 
 # Functions
 function checkConnection
@@ -79,7 +81,7 @@ if ($roleAssignments)
         csv
         {
             Write-Host "Creating CSV..."
-            $outputFile = $folder + "\Azure-IAM-Report.csv"
+            $outputFile = $folder + $fileName + ".csv"
             $roleAssignments | Export-Csv -Path $outputFile -NoTypeInformation
             Write-Host "CSV file created on" $outputfile
             break
@@ -95,7 +97,7 @@ if ($roleAssignments)
                 Write-Host "Done!"
             }
             Write-Host "Creating XLSX..."
-            $outputFile = $folder + "\Azure-IAM-Report.xlsx"
+            $outputFile = $folder + $fileName + ".xlsx"
             $roleAssignments | Export-Excel -Path $outputFile
             Write-Host "XLSX file created on" $outputfile
             break
