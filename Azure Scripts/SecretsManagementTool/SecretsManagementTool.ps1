@@ -93,9 +93,8 @@ DynamicParam
 begin
 {
     function Install-Requirements() {
-        $ModuleInstalled = Get-InstalledModule -Name $Name -ErrorAction SilentlyContinue
+        $moduleInstalled = Get-InstalledModule -Name $Name -ErrorAction SilentlyContinue
     }
-
 }
 process {}
 end {}
