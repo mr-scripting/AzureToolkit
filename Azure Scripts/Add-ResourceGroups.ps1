@@ -44,7 +44,7 @@ DynamicParam
     $locationAttributeCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
 
     # Get the allowed locations
-    $vf = Get-AzLocation | Select-Object -ExpandProperty Location
+    $vf = Get-AzLocation | Select-Object -ExpandProperty DisplayName
 
     #add our custom attribute
     $ValidateSetAttribute = New-Object System.Management.Automation.ValidateSetAttribute($vf)
