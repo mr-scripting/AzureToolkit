@@ -60,9 +60,7 @@ $checkInstalled = cmd.exe /c "winget list ShiningLight.OpenSSLLight" 2> $null
 if ($checkInstalled -match "ShiningLight.OpenSSLLight")
 {
   Write-Host "Open SSL Already Installed"
-}
-else
-{
+}else{
   Write-Host "Installing OpenSSL..."
   winget install -e --id ShiningLight.OpenSSL -h
   Write-Host "OpenSSL installed..."
