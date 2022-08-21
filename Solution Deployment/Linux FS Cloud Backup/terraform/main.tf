@@ -25,6 +25,21 @@ provider "azurerm" {
   features {}
 }
 
+
+# Service Principal for our backup script
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "appregistration" {
+  display_name = "backupapplication"
+  owners       = [data.azuread_client_config.current.object_id]
+}
+
+resource "azuread_service_principal" "backupserviceprinciple" {
+  application_id               = azuread_application.appregistration.application_id
+  app_role_assignment_required = false
+  owners                       = [data.azuread_client_config.current.object_id]
+}
+
 # Resource Group
 resource "azurerm_resource_group" "resourcegroup" {
   name     = "homeresourcegroup"
