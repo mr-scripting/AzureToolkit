@@ -2,9 +2,27 @@
 #### Main Terraform configuration file ######
 #############################################
 
-# Provider
+# Variables
+
+variable "tenant_id" {
+  type = string
+  description = "The Azure tenant ID"
+}
+
+variable "subscription_id" {
+  type = string
+  description = "The Azure Subscription ID"
+}
+
+# Providers
 provider "azuread" {
-  tenant_id = "${var.tenant_id}"
+  tenant_id = var.tenant_id
+}
+
+provider "azurerm" {
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
+  features {}
 }
 
 # Resource Group
