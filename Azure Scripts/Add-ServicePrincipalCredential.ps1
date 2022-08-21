@@ -133,7 +133,7 @@ try
         if ($ExportPrivateKey -and $PSBoundParameters.ContainsKey('certPassword'))
         {
             Write-Host "Exporting the certificate..." -ForegroundColor Yellow
-            ExportCertificate -Certificate $certificate -Path $certFilePath -CertName $certName -Password $certPassword-certType "pfx" | Out-Null
+            ExportCertificate -Certificate $certificate -Path $certFilePath -CertName $certName -Password $certPassword -certType "pfx" | Out-Null
             $certPrivPath = $certFilePath + "\" + $certName + ".pfx"
             Write-Host " The certificate was successfully exported!" -ForegroundColor Green
             Write-Host "You can find the certificate here" $certPrivPath
