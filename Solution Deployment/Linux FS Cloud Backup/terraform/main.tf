@@ -25,10 +25,11 @@ provider "azurerm" {
   features {}
 }
 
+# data
+data "azuread_client_config" "current" {}
+data "azurerm_subscription" "current" {}
 
 # Service Principal for our backup script
-data "azuread_client_config" "current" {}
-
 resource "azuread_application" "appregistration" {
   display_name = "backupapplication"
   owners       = [data.azuread_client_config.current.object_id]
@@ -38,6 +39,12 @@ resource "azuread_service_principal" "backupserviceprinciple" {
   application_id               = azuread_application.appregistration.application_id
   app_role_assignment_required = false
   owners                       = [data.azuread_client_config.current.object_id]
+}
+
+# Generate a Password for the Service Principal
+resource "azuread_application_password" "appregistrationPassword" {
+  application_object_id = azuread_application.appregistration.object_id
+  end_date_relative     = "8765h48m"
 }
 
 # Resource Group
@@ -66,4 +73,25 @@ resource "azurerm_storage_account" "storage" {
   tags = {
     environment = "homesetup"
   }
+}
+
+# IAM Role assignment over storage
+resource "azurerm_role_assignment" "StorageBlobDataOwner" {
+  scope                = resource.azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Owner"
+  principal_id         = resource.azuread_service_principal.backupserviceprinciple.id
+}
+
+# Output the service principal password (This is not recommended in production cases. Azure Keyvault should be used instead)
+output "appId" {
+  value = resource.azuread_application.appregistration.id
+}
+output "displayName" {
+  value = resource.azuread_application.appregistration.display_name
+}
+output "password" {
+  value = nonsensitive(resource.azuread_application_password.appregistrationPassword.value)
+}
+output "tenant" {
+  value = var.tenant_id
 }
