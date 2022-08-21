@@ -5,12 +5,12 @@
 # Variables
 
 variable "tenant_id" {
-  type = string
+  type        = string
   description = "The Azure tenant ID"
 }
 
 variable "subscription_id" {
-  type = string
+  type        = string
   description = "The Azure Subscription ID"
 }
 
@@ -45,7 +45,7 @@ resource "azurerm_storage_account" "storage" {
   account_replication_type = "LRS"
 
   network_rules {
-    default_action             = "Deny"
+    default_action = "Deny"
   }
 
   tags = {
