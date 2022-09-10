@@ -65,6 +65,7 @@ resource "azurerm_storage_account" "storage" {
   location                 = azurerm_resource_group.resourcegroup.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
+  public_network_access_enabled = "false"
 
   network_rules {
     default_action = "Deny"
