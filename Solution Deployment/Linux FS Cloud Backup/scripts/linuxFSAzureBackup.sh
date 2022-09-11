@@ -5,39 +5,44 @@
 .DESCRIPTION
     This bash script leverages rclone to backup a linux source folder or filesystem to azure blob storage.
     Its mainly for personal use and a great solution for backing up NAS or other home storage solutions.
-.PARAMETER Path
-    Specifies a path to one or more locations.
-.PARAMETER LiteralPath
-    Specifies a path to one or more locations. Unlike Path, the value of LiteralPath is used exactly as it
-    is typed. No characters are interpreted as wildcards. If the path includes escape characters, enclose
-    it in single quotation marks. Single quotation marks tell Windows PowerShell not to interpret any
-    characters as escape sequences.
-.PARAMETER InputObject
-    Specifies the object to be processed.  You can also pipe the objects to this command.
+.PARAMETER name
+    The name that we will assign to the rclone configuration.
+.PARAMETER credential_file
+    Path for the azure Cli generated credentials file.
+.PARAMETER storageaccountname
+    The Azure Storage Account Name.
+.PARAMETER resourcegroupname
+    The resource Group Name where the Azure Storage Account resides.
+.PARAMETER subscriptionid
+    The Azure subscription ID.
+.PARAMETER accesstier
+    The desired storage account accesstier for the backed up files.
+.PARAMETER accesstier
+    The desired storage account accesstier for the backed up files.
+.PARAMETER sourcepath
+    The filesystem path in which the files to be backed up reside.
+.PARAMETER container
+    The Azure Storage account container name.
 .EXAMPLE
     ./linuxFSAzureBackup.sh  -n "azureBackup" -k "/home/pi/azurecredentials.json" -s "storageaccountxxxx" -r "resourcegroupxxxx" -i "xxxxx-xxx-xxxxx-xxxx-xxxxxxxxxx" -a "Archive" -p "/mnt" -c "backup"
 .INPUTS
-    Inputs to this cmdlet (if any)
+    Please check parameters
 .OUTPUTS
-    Output from this cmdlet (if any)
+    Outputs the file names of the files being copied to azure storage
 .NOTES
-    General notes
-.COMPONENT
-    The component this cmdlet belongs to
-.ROLE
-    The role this cmdlet belongs to
+    This script is offered as is. If you find any issue please open a github issue and I will try to fix it as soon as possible.
 .FUNCTIONALITY
-    The functionality that best describes this cmdlet
+    This script is a backup script written in bash and it aims to be a secure cloud backup solution for linux home devices.
 '
 
 # Parameters structure from "Rafael Muynarsk" -> https://unix.stackexchange.com/q/31414
 helpFunction() {
     echo ""
     echo "Usage: $0 -n name -k credential_file -s storageaccountname -r resourcegroupname -i subscriptionid -a accesstier -p sourcepath -c container"
-    echo -e "\t-n Description of what is name"
+    echo -e "\t-n The name that we will assign to the rclone configuration"
     echo -e "\t-k Path for the azure Cli generated credentials file"
     echo -e "\t-s The Azure Storage Account Name"
-    echo -e "\t-r The resource Group Name where the Azure Storage resides"
+    echo -e "\t-r The resource Group Name where the Azure Storage Account resides"
     echo -e "\t-i The Azure subscription id"
     echo -e "\t-a The desired storage account accesstier for the backed up files"
     echo -e "\t-p The path where the items to be backed up reside"
@@ -128,15 +133,46 @@ rclone_backup() {
 # End of Functions
 
 # Start Script
-## Check requirements
-checkRcloneInstall=$(apt-cache policy rclone)
-rcloneInstalled=$(echo "$checkRcloneInstall" | grep "Installed: (none)")
+## Check if requirements are in place
 
-if [ ! -z "$rcloneInstalled" ]; then
-    echo 'rclone is not installed. Please install it before executing this script!' >&2
+APTDir="/etc/apt/sources.list.d"
+DNFDir="/etc/dnf"
+YUMDir="/etc/yum.repos.d"
+ZIPPDir="/etc/zypp"
+PACMANDir="/etc/pacman.d"
+
+if [ -d "$APTDir" ]; then
+    checkRcloneInstall+=$(apt-cache policy rclone | grep -v "Installed: (none)")
+    checkJQInstall+=$(apt-cache policy jq | grep -v "Installed: (none)")
+fi
+
+if [ -d "$DNFDir" ]; then
+    checkRcloneInstall+=$(dnf list installed | grep ^rclone)
+    checkJQInstall+=$(dnf list installed | grep ^jq)
+fi
+
+if [ -d "$YUMDir" ]; then
+    checkRcloneInstall+=$(yum list installed | grep ^rclone)
+    checkJQInstall+=$(yum list installed | grep ^jq)
+fi
+
+if [ -d "$ZIPPDir" ]; then
+    checkRcloneInstall+=$(zypper search -i rclone)
+    checkJQInstall+=$(zypper search -i jq)
+fi
+
+if [ -d "$PACMANDir" ]; then
+    checkRcloneInstall+=$(pacman -Qi rclone)
+    checkJQInstall+=$(pacman -Qi jq)
+fi
+
+if [ -z "$checkRcloneInstall" ] && [ -z "$checkJQInstall" ]; then
+    echo "$checkRcloneInstall"
+    echo "$checkJQInstall"
+    echo 'Dependencies not installed. Please install rclone and jq before executing this script!' >&2
     exit
 else
-    echo 'rclone is installed. Proceeding script execution.'
+    echo 'rclone and jq installed. Proceeding script execution.'
 fi
 
 ## Gets the public ip address in order to use in the network exeption configuration
@@ -165,7 +201,7 @@ echo "Done!"
 
 ## Checks for empty configuration. If empty configuration then a configuration is created and backup is executed
 config=$(rclone config dump)
-if [ ! -z "$config" ]; then
+if [ -z "$config" ]; then
     rclone_config
     rclone_backup
 else
