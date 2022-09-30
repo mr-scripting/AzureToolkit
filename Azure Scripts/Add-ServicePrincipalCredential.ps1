@@ -83,12 +83,23 @@ function ExportCertificate {
         $Certificate | Export-Certificate -FilePath $Path"\"$CertName".cer"
     }
 }
+
+function Login {
+    $context = Get-AzContext
+
+    if (!$context) {
+        Connect-AzAccount -UseDeviceAuthentication
+    } 
+    else {
+        Write-Host "Connected!"
+    }
+}
 ### End Functions
 
 try {
     # * Login to Azure
     # ? Any way to automate this login?
-    Connect-AzAccount -UseDeviceAuthentication
+    Login
 
     # Convert strings to date
     if (!$PSBoundParameters.ContainsKey('startDate')) {
@@ -165,7 +176,8 @@ try {
         # * Add password credential
         Write-Host "Creating the application password for" $appId"..." -ForegroundColor Yellow
         # ? Option to output the password to screen or save to keyvault
-        New-AzADAppCredential -ApplicationId $appId -StartDate $startDate -EndDate $endDate
+        $credential = New-AzADAppCredential -ApplicationId $appId -StartDate $startDate -EndDate $endDate
+        $credential | Format-List
         Write-Host "Done!" -ForegroundColor Green
     }
 }
