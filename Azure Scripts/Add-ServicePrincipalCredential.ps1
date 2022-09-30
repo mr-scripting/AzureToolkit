@@ -66,8 +66,7 @@ param (
 )
 
 ### * Functions
-function ExportCertificate
-{
+function ExportCertificate {
     param (
         [Parameter(Mandatory)][object]$Certificate,
         [Parameter(Mandatory)][string]$Path,
@@ -76,37 +75,31 @@ function ExportCertificate
         [Parameter(Mandatory)][string]$certType
     )
     # * Exports certificate to pfx format
-    if ($certType -eq "pfx")
-    {
+    if ($certType -eq "pfx") {
         $Certificate | Export-PfxCertificate -FilePath $Path"\"$CertName".pfx" -Password $Password
     }
     # Exports certificate to cer format
-    if ($certType -eq "cer")
-    {
+    if ($certType -eq "cer") {
         $Certificate | Export-Certificate -FilePath $Path"\"$CertName".cer"
     }
 }
 ### End Functions
 
-try
-{
+try {
     # * Login to Azure
     # ? Any way to automate this login?
     Connect-AzAccount -UseDeviceAuthentication
 
     # Convert strings to date
-    if (!$PSBoundParameters.ContainsKey('startDate'))
-    {
+    if (!$PSBoundParameters.ContainsKey('startDate')) {
         $startDate = Get-Date $startDate
     }
-    if (!$PSBoundParameters.ContainsKey('endDate'))
-    {
+    if (!$PSBoundParameters.ContainsKey('endDate')) {
         $endDate = Get-Date $endDate
     }
 
     # If option is certificate
-    if ($PSBoundParameters.ContainsKey('certName'))
-    {
+    if ($PSBoundParameters.ContainsKey('certName')) {
         # * Generate the public certificate
         $certificate = ""
         Write-Host "Creating self-signed certificate" $certName "..." -ForegroundColor Yellow
@@ -120,8 +113,7 @@ try
         Write-Host " The certificate was successfully exported!" -ForegroundColor Green
 
         # * Export certificate with private key
-        if ($ExportPrivateKey -and !$PSBoundParameters.ContainsKey('certPassword'))
-        {
+        if ($ExportPrivateKey -and !$PSBoundParameters.ContainsKey('certPassword')) {
             $securePassword = Read-Host "Please type the certificate password" -AsSecureString
             Write-Host "Exporting the certificate..." -ForegroundColor Yellow
             ExportCertificate -Certificate $certificate -Path $certFilePath -CertName $certName -Password $securePassword -certType "pfx" | Out-Null
@@ -130,8 +122,7 @@ try
             Write-Host "You can find the certificate here" $certPrivPath
         }
 
-        if ($ExportPrivateKey -and $PSBoundParameters.ContainsKey('certPassword'))
-        {
+        if ($ExportPrivateKey -and $PSBoundParameters.ContainsKey('certPassword')) {
             Write-Host "Exporting the certificate..." -ForegroundColor Yellow
             ExportCertificate -Certificate $certificate -Path $certFilePath -CertName $certName -Password $certPassword -certType "pfx" | Out-Null
             $certPrivPath = $certFilePath + "\" + $certName + ".pfx"
@@ -154,22 +145,20 @@ try
         Write-Host "Done!" -ForegroundColor Green
 
         # If the option to export public certificate is not checked then delete the certificate in the end
-        if (!$ExportPubCertificate)
-        {
+        if (!$ExportPubCertificate) {
             Write-Host "Cleaning up..."
             Remove-Item -Path $certFullPath -Force
             Write-Host "Done!"
         }
-        else
-        {
+        else {
             Write-Host "Your certificate is located at" $certFullPath
         }
     }
 
     # Generates password credential for service principal
-    if ($PSBoundParameters.ContainsKey('password'))
-    {
-        $credentials = New-Object -TypeName "Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.MicrosoftGraphPasswordCredential"
+    if ($PSBoundParameters.ContainsKey('password')) {
+        Import-Module Az.Resources
+        $credentials = New-Object Microsoft.Azure.PowerShell.Cmdlets.Resources.MSGraph.Models.ApiV10.MicrosoftGraphPasswordCredential
         $credentials.StartDateTime = $startDate
         $credentials.EndDateTime = $endDate
 
@@ -180,8 +169,7 @@ try
         Write-Host "Done!" -ForegroundColor Green
     }
 }
-catch
-{
+catch {
     Write-Host "An error occurred:"
     Write-Host $_
 }
